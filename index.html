@@ -4380,7 +4380,7 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
   window.addEventListener('resize', setPreviewStickyOffset);
 
   // ============================================================================
-  // v47: UTILITY HELPERS
+  // UTILITY HELPERS
   // ============================================================================
 
   // Field format validation
@@ -4489,7 +4489,7 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
   }
 
   // ============================================================================
-  // v47: TEMPLATE/PRESET SYSTEM
+  // TEMPLATE/PRESET SYSTEM
   // ============================================================================
   const PRESET_KEY = "vicpol_report_presets";
   function loadPresets() { try { return JSON.parse(localStorage.getItem(PRESET_KEY) || "{}"); } catch(e) { return {}; } }
@@ -4615,6 +4615,7 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
     const name = prompt("Template name:");
     if (!name) return;
     const presets = loadPresets();
+    const existed = name in presets;
     presets[name] = {
       callsign: (document.getElementById("tplCallsign")?.value || "").trim(),
       unit: (document.getElementById("tplUnit")?.value || "").trim(),
@@ -4625,7 +4626,7 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
     savePresets(presets);
     safeLocalStorageSet("vicpol_report_last_preset", name);
     renderPresetList();
-    toast("Template saved: " + name, "ok");
+    toast((existed ? "Template updated: " : "Template saved: ") + name, "ok");
   }
 
   function applyPresetToForm() {
@@ -6006,7 +6007,6 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
 
   // Autosave (THROTTLED) — v47: uses safe storage with quota handling
   const throttledAutosave = throttle(() => {
-    // v47: Always sync chargesList/pinsList from Sets before saving
     state.chargesList = Array.from(selectedChargesSet).join('\n');
     state.pinsList = Array.from(selectedPinsSet).join('\n');
     writeStoredJson(AUTOSAVE_KEY, state);
@@ -6023,7 +6023,7 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
     const now = Date.now();
     if (now - _lastBackupTime < BACKUP_INTERVAL) return;
     // Only backup if there's meaningful content
-    if (!norm(state.offender.name) && !norm(state.chargesList) && !norm(state.summary) && !norm(state.fieldContact?.name) && !norm(state.searchSeizure?.name)) return;
+    if (!norm(state.offender.name) && !norm(state.chargesList) && !norm(state.summary) && !norm(state.fieldContact?.name) && !norm(state.searchSeizure?.name) && !norm(state.trafficWarrant?.rego) && !norm(state.vehicleInspection?.rego)) return;
     _lastBackupTime = now;
     try {
       const backups = readStoredJson(BACKUP_KEY, []);
@@ -6080,7 +6080,6 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
       }
     } catch (e) {
       console.warn("Load autosave failed:", e);
-      // v47: Show toast on next tick so DOM is ready
       setTimeout(() => toast("⚠ Autosave data was corrupted — starting fresh", "warn"), 500);
       try { localStorage.removeItem(AUTOSAVE_KEY); } catch(e2) {}
     }
@@ -6110,7 +6109,6 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
       if (drafts[name]) {
         const draft = drafts[name];
         state = deepMerge(deepClone(INITIAL_STATE), draft);
-        // v47: Restore Sets from saved arrays if available
         if (draft._charges) selectedChargesSet = new Set(draft._charges);
         if (draft._pins) selectedPinsSet = new Set(draft._pins);
         renderAll();
@@ -6418,6 +6416,17 @@ Is there anything you would like to say regarding the charges?`;
     } else {
       toast("No default questions for this report type", "warn");
     }
+  }
+
+  async function doCopyPreview() {
+    const warnings = validateDraft();
+    if (warnings.length > 0) {
+      const proceed = confirm("Report has " + warnings.length + " issue(s):\n\n• " + warnings.slice(0, 5).join("\n• ") + (warnings.length > 5 ? "\n• ... and " + (warnings.length - 5) + " more" : "") + "\n\nCopy anyway?");
+      if (!proceed) return;
+    }
+    const text = (el.preview?.textContent || "").trim();
+    const success = await copyToClipboard(text);
+    toast(success ? "Copied to clipboard" : "Failed to copy", success ? "ok" : "err");
   }
 
   async function copyToClipboard(text) {
@@ -6864,7 +6873,7 @@ Is there anything you would like to say regarding the charges?`;
       const serialVal = serial[1].toUpperCase();
       const item = s.match(itemRe);
       if (item) out.push(`${item[1].toUpperCase()} SN: ${serialVal}`);
-      else out.push(`Serial ${serialVal}`);
+      else out.push(`SN: ${serialVal}`);
     }
     return [...new Set(out)];
   }
@@ -7888,7 +7897,6 @@ Is there anything you would like to say regarding the charges?`;
     
     function renderEvidenceList() {
       if (!evidenceList) return;
-      // v47: Evidence items now support inline quantity editing
       evidenceList.innerHTML = evidenceItems.map((item, idx) => {
         // Parse qty prefix if present (e.g. "3x BWC" -> qty=3, text="BWC")
         const qtyMatch = item.match(/^(\d+)\s*x\s+(.+)$/i);
@@ -7968,7 +7976,6 @@ Is there anything you would like to say regarding the charges?`;
           if (!isNaN(idx)) removeEvidence(idx);
         }
       });
-      // v47: Delegated change handler for inline qty editing
       evidenceList.addEventListener('change', (e) => {
         const input = e.target.closest('input[data-ev-qty]');
         if (!input) return;
@@ -8276,16 +8283,7 @@ Is there anything you would like to say regarding the charges?`;
 
     // Buttons
     if (el.copyBtn) {
-      el.copyBtn.addEventListener("click", async () => {
-        const warnings = validateDraft();
-        if (warnings.length > 0) {
-          const proceed = confirm("Report has " + warnings.length + " issue(s):\n\n• " + warnings.slice(0, 5).join("\n• ") + (warnings.length > 5 ? "\n• ... and " + (warnings.length - 5) + " more" : "") + "\n\nCopy anyway?");
-          if (!proceed) return;
-        }
-        const text = (el.preview?.textContent || "").trim();
-        const success = await copyToClipboard(text);
-        toast(success ? "Copied to clipboard" : "Failed to copy", success ? "ok" : "err");
-      });
+      el.copyBtn.addEventListener("click", doCopyPreview);
     }
 
     if (el.saveDraftBtn) {
@@ -8473,7 +8471,7 @@ Is there anything you would like to say regarding the charges?`;
     if (bcFPO) bcFPO.addEventListener('change', () => { state.bailConditions.fpo = bcFPO.checked; calculateBailAmount(); throttledAutosave(); });
 
     // ============================================================================
-    // v47: NEW EVENT HANDLERS
+    // EVENT HANDLERS
     // ============================================================================
 
     // Templates modal
@@ -8739,7 +8737,6 @@ Is there anything you would like to say regarding the charges?`;
         const raw = el.ocrText.value || "";
         state.ocrText = raw;
         if (!raw.trim()) return;
-        // Run full OCR parse on manual text input — same pipeline as advanced OCR
         const p = parseOCR(raw);
         if (!p) return;
         applyParsedOcrBundleToReport(p, raw, 'all');
@@ -8932,7 +8929,6 @@ Is there anything you would like to say regarding the charges?`;
     }
     const evidenceListEl = document.getElementById('evidenceList');
     if (evidenceListEl) {
-      // v47: Use editable evidence rows matching renderEvidenceList
       evidenceListEl.innerHTML = evidenceItems.map((item, idx) => {
         const qtyMatch = item.match(/^(\d+)\s*x\s+(.+)$/i);
         const qty = qtyMatch ? parseInt(qtyMatch[1]) : 1;
@@ -11032,11 +11028,7 @@ Is there anything you would like to say regarding the charges?`;
     // Ctrl+Shift+C / Cmd+Shift+C → Copy Preview
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === "c") {
       e.preventDefault();
-      if (el.preview) {
-        copyToClipboard(el.preview.textContent).then(ok => {
-          toast(ok ? "Preview copied!" : "Copy failed", ok ? "ok" : "err");
-        });
-      }
+      doCopyPreview();
       return;
     }
 
