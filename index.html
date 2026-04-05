@@ -682,32 +682,8 @@
     .validation-panel .vi-quality{color:rgba(255,200,100,0.85)}
     .validation-panel .vi-quality::before{content:"💡" !important;flex-shrink:0}
   
-    /* OCR Lab / Advanced OCR */
-    #ocrCard{position:relative;z-index:100}
-    #ocrAdvancedPanel{margin-top:12px;border:1px solid var(--border);border-radius:10px;background:rgba(0,0,0,0.12)}
-    #ocrAdvancedPanel[open]{
-      position:relative;
-      z-index:200;
-    }
-    #ocrAdvancedPanel[open]>.ocr-adv-body{
-      position:absolute;
-      left:-1px;right:-1px;top:100%;
-      background:var(--vp-navy);
-      border:1px solid var(--vp-accent-btn);
-      border-top:none;
-      border-radius:0 0 10px 10px;
-      box-shadow:0 20px 60px rgba(0,0,0,0.7);
-      padding:14px;
-      max-height:80vh;
-      overflow-y:auto;
-      scrollbar-width:thin;
-      scrollbar-color:rgba(255,255,255,0.15) transparent;
-    }
-    #ocrAdvancedPanel summary{cursor:pointer;padding:12px 14px;font-weight:900;list-style:none;user-select:none;display:flex;align-items:center;gap:8px;font-size:13px;text-transform:uppercase;letter-spacing:0.04em;color:var(--vp-cyan)}
-    #ocrAdvancedPanel summary::-webkit-details-marker{display:none}
-    #ocrAdvancedPanel summary::marker{display:none;content:''}
-    .ocr-adv-chevron{transition:transform 0.2s ease;display:inline-block;font-size:11px}
-    #ocrAdvancedPanel[open] .ocr-adv-chevron{transform:rotate(90deg)}
+    /* OCR Page */
+    #ocrPage .ocr-lab-preview{margin-bottom:10px}
     .ocr-adv-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .ocr-adv-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
     .ocr-lab-box{padding:10px;border:1px solid var(--border);border-radius:8px;background:rgba(0,0,0,0.18)}
@@ -726,33 +702,16 @@
     .ocr-lab-pass{padding:6px;border-radius:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);font-size:11px}
     .ocr-lab-pass strong{color:var(--vp-cyan)}
     /* Light mode */
-    body.light-mode #ocrAdvancedPanel[open]>.ocr-adv-body{background:var(--vp-navy);border-color:rgba(0,0,0,0.15);box-shadow:0 20px 60px rgba(0,0,0,0.12)}
     /* Mobile OCR */
     @media (max-width:980px){.ocr-adv-grid,.ocr-adv-fields{grid-template-columns:1fr}}
     @media (max-width:600px){
-      #ocrAdvancedPanel[open]>.ocr-adv-body{
-        position:fixed;
-        left:0;right:0;top:auto;bottom:0;
-        max-height:85vh;
-        border-radius:16px 16px 0 0;
-        border:1px solid var(--vp-accent-btn);
-        padding:14px 12px 24px;
-        animation:ocrSlideUp 0.25s ease both;
-      }
       .ocr-adv-grid{grid-template-columns:1fr}
       .ocr-adv-fields{grid-template-columns:1fr}
       .ocr-lab-variants{grid-template-columns:repeat(3,1fr)}
       .ocr-lab-row{grid-template-columns:90px 1fr}
-      #ocrAdvancedPanel summary{padding:10px 12px;font-size:12px}
     }
     @keyframes ocrSlideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
-    .ocr-adv-backdrop{display:none}
     @media (max-width:600px){
-      .ocr-adv-backdrop.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:190;animation:fadeIn 0.2s ease}
-    }
-    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-    @media (max-width:600px){
-      .ocr-adv-close-row{display:block !important;margin-bottom:12px}
     }
 
   </style>
@@ -786,6 +745,7 @@
   <nav class="tool-nav" id="toolNav" role="tablist" aria-label="Tool navigation">
     <button class="nav-active" data-tool-page="report" role="tab" aria-selected="true" aria-controls="reportPage" id="tab-report">Report Tool</button>
     <button data-tool-page="traffic" role="tab" aria-selected="false" aria-controls="trafficPage" id="tab-traffic">Traffic History</button>
+    <button data-tool-page="ocr" role="tab" aria-selected="false" aria-controls="ocrPage" id="tab-ocr">📷 OCR Intake</button>
 </nav>
 
   <!-- REPORT TOOL PAGE -->
@@ -868,112 +828,6 @@
           </div>
           <div id="savedPersonsList" style="max-height:220px;overflow-y:auto;display:grid;gap:6px"></div>
         </div>
-      </div>
-
-      <!-- OCR -->
-      <div class="card" id="ocrCard">
-        <h2>OCR Intake</h2>
-        <div class="hint">
-          <span>📷</span>
-          <span>Click the box then press <strong>Ctrl+V</strong>, drag & drop an image, or pick a file. OCR will auto-fill NAME, DOB, SEX, ADDRESS, PHONE, VEHICLE info.</span>
-        </div>
-        <div id="pasteZone" tabindex="0" style="padding:20px; border:2px dashed var(--border); border-radius:12px; text-align:center; cursor:pointer; margin-top:10px; background:rgba(0,0,0,0.15)">
-          <div style="font-weight:900; margin-bottom:4px">Paste or drop image here</div>
-          <div class="muted">Works best with MDT profiles, licences, VicRoads, fingerprints, pockets, GSR, serials.</div>
-        </div>
-        <input id="imgFile" type="file" accept="image/*" capture="environment" style="margin-top:10px"/>
-        <div class="row" style="margin-top:10px">
-          <input id="ocrStatus" readonly value="OCR idle" style="background:rgba(0,0,0,0.3)"/>
-          <button class="btn" id="clearOcrBtn">Clear</button>
-        </div>
-        <label style="display:flex; align-items:center; gap:10px; margin-top:10px; cursor:pointer">
-          <input id="ocrWeaponsOnly" type="checkbox"/>
-          <span>Scan for weapons and contraband only</span>
-        </label>
-        <textarea id="ocrText" rows="6" placeholder="OCR text appears here" style="margin-top:10px"></textarea>
-
-        <!-- Advanced OCR — overlaps cards below -->
-        <div id="ocrAdvBackdrop" class="ocr-adv-backdrop"></div>
-        <details id="ocrAdvancedPanel">
-          <summary><span class="ocr-adv-chevron">▸</span> Advanced OCR</summary>
-          <div class="ocr-adv-body">
-            <!-- Close button for mobile -->
-            <div style="display:none" class="ocr-adv-close-row">
-              <button class="btn" id="ocrAdvCloseBtn" type="button" style="width:100%;text-align:center;padding:10px;font-size:13px;border-radius:10px">Close Advanced OCR</button>
-            </div>
-            <div class="muted" style="font-size:12px;margin-bottom:10px">Multi-pass layout-aware OCR. Uses the image loaded above.</div>
-
-            <div class="ocr-adv-grid">
-              <label><div class="lbl">OCR focus mode</div>
-                <select id="ocrLabMode">
-                  <option value="auto">Auto detect</option>
-                  <option value="license">Licence card</option>
-                  <option value="person">LEAP / person panel</option>
-                  <option value="vehicle">MELROADS / vehicle panel</option>
-                  <option value="weapons">Weapons / pockets text</option>
-                </select>
-              </label>
-              <label style="display:flex;align-items:end">
-                <span style="display:flex;align-items:center;gap:10px;padding-bottom:10px">
-                  <input id="ocrLabAutoApply" type="checkbox" />
-                  <span style="font-size:12px">Auto-apply best read</span>
-                </span>
-              </label>
-            </div>
-
-            <div style="margin-top:10px;margin-bottom:8px">
-              <div class="lbl" style="margin-bottom:6px">Load separate image into Advanced OCR</div>
-              <input id="ocrLabFile" type="file" accept="image/*" capture="environment" style="font-size:12px"/>
-            </div>
-            <div class="ocr-adv-toolbar">
-              <button class="btn" id="ocrLabRunBtn" type="button">Run Advanced OCR</button>
-              <button class="btn" id="ocrLabApplyBtn" type="button">Apply All</button>
-              <button class="btn" id="ocrLabClearBtn" type="button">Clear</button>
-            </div>
-            <input id="ocrLabStatus" readonly value="Advanced OCR idle" style="margin-top:8px;background:rgba(0,0,0,0.3);font-size:12px" />
-
-            <img id="ocrLabSourcePreview" class="ocr-lab-preview" alt="OCR source preview" style="margin-top:10px;display:none" />
-            <div id="ocrLabVariants" class="ocr-lab-variants"></div>
-
-            <div class="ocr-adv-fields">
-              <div class="ocr-lab-box">
-                <h3>Person / Licence</h3>
-                <div id="ocrLabPersonFields"></div>
-                <div class="ocr-adv-toolbar">
-                  <button class="btn" id="ocrLabApplyPersonBtn" type="button">Apply person</button>
-                  <button class="btn" id="ocrLabApplyLicenseBtn" type="button">Apply licence</button>
-                </div>
-              </div>
-              <div class="ocr-lab-box">
-                <h3>Vehicle / LEAP</h3>
-                <div id="ocrLabVehicleFields"></div>
-                <div class="ocr-adv-toolbar">
-                  <button class="btn" id="ocrLabApplyVehicleBtn" type="button">Apply vehicle</button>
-                </div>
-              </div>
-              <div class="ocr-lab-box">
-                <h3>Items / Weapons</h3>
-                <div id="ocrLabItemsFields"></div>
-                <div class="ocr-adv-toolbar">
-                  <button class="btn" id="ocrLabApplyItemsBtn" type="button">Apply items</button>
-                </div>
-              </div>
-              <div class="ocr-lab-box">
-                <h3>Best OCR passes</h3>
-                <div id="ocrLabPasses" class="ocr-lab-pass-list"><div class="muted">No OCR run yet.</div></div>
-              </div>
-            </div>
-
-            <div style="margin-top:12px;padding:10px;border-radius:8px;background:rgba(0,0,0,0.12);border:1px solid var(--border)">
-              <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
-                <strong style="font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)">Raw Advanced OCR Output</strong>
-                <button class="btn" id="ocrLabApplyRawBtn" type="button" style="font-size:10px;padding:5px 8px">Send raw to report</button>
-              </div>
-              <textarea id="ocrLabText" rows="8" placeholder="Advanced OCR output appears here" style="font-size:12px"></textarea>
-            </div>
-          </div>
-        </details>
-
       </div>
 
       <!-- Charges -->
@@ -1626,6 +1480,126 @@ Date        P?    Amount        Offence
     </div>
   </div>
   </div><!-- end #trafficPage -->
+  <div id="ocrPage" class="tool-page" role="tabpanel" aria-labelledby="tab-ocr">
+  <div style="max-width:900px;margin:0 auto;padding:16px 22px 40px">
+
+    <!-- Drop / Paste zone — large, prominent -->
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+        <h2 style="margin:0">📷 OCR Intake</h2>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <select id="ocrLabMode" style="max-width:200px;font-size:12px;padding:8px 10px">
+            <option value="auto">Auto detect</option>
+            <option value="license">Licence card</option>
+            <option value="person">LEAP / person panel</option>
+            <option value="vehicle">MELROADS / vehicle panel</option>
+            <option value="weapons">Weapons / pockets text</option>
+          </select>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;white-space:nowrap">
+            <input id="ocrWeaponsOnly" type="checkbox"/>
+            <span>Weapons only</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Big drop zone -->
+      <div id="pasteZone" tabindex="0" style="padding:36px 20px;border:2px dashed var(--border);border-radius:8px;text-align:center;cursor:pointer;background:rgba(0,0,0,0.12);transition:border-color 0.15s,background 0.15s">
+        <div style="font-size:28px;margin-bottom:8px">📋</div>
+        <div style="font-weight:900;font-size:15px;margin-bottom:6px">Paste, drop or tap to load image</div>
+        <div class="muted" style="font-size:12px">MDT profiles · licences · VicRoads · fingerprints · pockets · GSR · serials</div>
+        <div class="muted" style="font-size:11px;margin-top:6px">Ctrl+V to paste · drag & drop · or use buttons below</div>
+      </div>
+
+      <!-- File inputs row -->
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center">
+        <input id="imgFile" type="file" accept="image/*" capture="environment" style="flex:1;min-width:0;font-size:12px"/>
+        <input id="ocrLabFile" type="file" accept="image/*" style="flex:1;min-width:0;font-size:12px"/>
+        <button class="btn" id="clearOcrBtn" style="flex-shrink:0">Clear All</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:4px">
+        <div class="muted" style="font-size:10px;flex:1">📷 Camera / file (quick scan)</div>
+        <div class="muted" style="font-size:10px;flex:1">🔬 Advanced scan file</div>
+      </div>
+
+      <!-- Status bar -->
+      <div style="margin-top:10px">
+        <input id="ocrLabStatus" readonly value="Ready — load an image to begin" style="width:100%;background:rgba(0,0,0,0.3);font-size:12px"/>
+      </div>
+    </div>
+
+    <!-- Advanced OCR — always visible, primary feature -->
+    <div class="card" style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <h2 style="margin:0">🔬 Advanced OCR</h2>
+        <div class="muted" style="font-size:12px">Multi-pass layout-aware scan — load image above then run</div>
+      </div>
+
+      <!-- Image preview + variants -->
+      <img id="ocrLabSourcePreview" class="ocr-lab-preview" alt="OCR source preview" style="display:none;margin-bottom:10px" />
+      <div id="ocrLabVariants" class="ocr-lab-variants"></div>
+
+      <!-- Run toolbar -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px">
+        <button class="btn" id="ocrLabRunBtn" type="button" style="background:rgba(0,102,204,0.25);border-color:rgba(0,102,204,0.5)">▶ Run OCR</button>
+        <button class="btn" id="ocrLabApplyBtn" type="button">Apply All</button>
+        <button class="btn" id="ocrLabClearBtn" type="button">Clear</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer">
+          <input id="ocrLabAutoApply" type="checkbox" checked />
+          <span>Auto-apply best read</span>
+        </label>
+      </div>
+
+      <!-- Results grid -->
+      <div class="ocr-adv-fields" id="ocrLabResultsGrid" style="display:none">
+        <div class="ocr-lab-box">
+          <h3>Person / Licence</h3>
+          <div id="ocrLabPersonFields"></div>
+          <div class="ocr-adv-toolbar">
+            <button class="btn" id="ocrLabApplyPersonBtn" type="button">Apply person</button>
+            <button class="btn" id="ocrLabApplyLicenseBtn" type="button">Apply licence</button>
+          </div>
+        </div>
+        <div class="ocr-lab-box">
+          <h3>Vehicle / LEAP</h3>
+          <div id="ocrLabVehicleFields"></div>
+          <div class="ocr-adv-toolbar">
+            <button class="btn" id="ocrLabApplyVehicleBtn" type="button">Apply vehicle</button>
+          </div>
+        </div>
+        <div class="ocr-lab-box">
+          <h3>Items / Weapons</h3>
+          <div id="ocrLabItemsFields"></div>
+          <div class="ocr-adv-toolbar">
+            <button class="btn" id="ocrLabApplyItemsBtn" type="button">Apply items</button>
+          </div>
+        </div>
+        <div class="ocr-lab-box">
+          <h3>Best OCR passes</h3>
+          <div id="ocrLabPasses" class="ocr-lab-pass-list"><div class="muted">No OCR run yet.</div></div>
+        </div>
+      </div>
+      <div id="ocrNoResultsHint" class="muted" style="font-size:12px;margin-top:8px">Load an image above and press Run Advanced OCR to see results here.</div>
+    </div>
+
+    <!-- Quick scan result + manual text -->
+    <div class="card" style="margin-bottom:14px">
+      <h2>Quick Scan Result</h2>
+      <div class="muted" style="font-size:12px;margin-bottom:8px">Raw text from quick scan. Edit and apply manually if needed.</div>
+      <textarea id="ocrText" rows="5" placeholder="Quick scan OCR text appears here — or paste text manually and it will auto-apply to the report" style="margin-bottom:10px"></textarea>
+
+      <!-- Raw advanced output -->
+      <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+          <strong style="font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)">Raw Advanced OCR Output</strong>
+          <button class="btn" id="ocrLabApplyRawBtn" type="button" style="font-size:10px;padding:5px 8px">Send raw to report</button>
+        </div>
+        <textarea id="ocrLabText" rows="5" placeholder="Advanced OCR output appears here" style="font-size:12px"></textarea>
+      </div>
+    </div>
+
+  </div>
+  </div><!-- end #ocrPage -->
+
 
 <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="undoBar" aria-live="polite" style="display:none"></div>
@@ -1710,7 +1684,7 @@ Date        P?    Amount        Offence
     pageTitle: "VicPol Tool v5",
     reportSubtitle: "Arrest Reports, Warrants, Traffic, Field Contacts, Search & Seizure, Traffic History & Vehicle Inspection",
     utilitySubtitle: "Traffic history lookup remains available while you work.",
-    ocrSubtitle: "OCR intake, licence, LEAP, MELROADS, fingerprint and weapons scanning."
+    ocrSubtitle: "OCR — licence, LEAP, MELROADS, fingerprint and weapons scanning."
   };
   const APP_TITLE = APP_META.pageTitle;
   const STORAGE_SCHEMA_VERSION = 1;
@@ -4386,6 +4360,9 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
         badge.dataset.context = '';
       }
       if (subtitle) subtitle.textContent = `${APP_META.fullName} - ${APP_META.reportSubtitle}`;
+    } else if (currentPage === 'ocr') {
+      if (badge) { badge.textContent = 'OCR INTAKE'; badge.dataset.context = 'ocr'; }
+      if (subtitle) subtitle.textContent = `${APP_META.fullName} - ${APP_META.ocrSubtitle}`;
     } else {
       if (badge) {
         badge.textContent = 'TRAFFIC HISTORY';
@@ -4682,7 +4659,7 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
     // OCR
     pasteZone: document.getElementById("pasteZone"),
     imgFile: document.getElementById("imgFile"),
-    ocrStatus: document.getElementById("ocrStatus"),
+    ocrStatus: document.getElementById("ocrLabStatus"), // unified — uses advanced OCR status bar
     ocrText: document.getElementById("ocrText"),
     ocrWeaponsOnly: document.getElementById("ocrWeaponsOnly"),
     clearOcrBtn: document.getElementById("clearOcrBtn"),
@@ -7483,188 +7460,6 @@ Is there anything you would like to say regarding the charges?`;
     return t;
   }
 
-  let _ocrBusy = false;
-  async function runOCR(blob) {
-    if (!blob) return;
-    if (typeof setOcrLabSource === 'function') {
-      try { setOcrLabSource(blob); } catch (_) {}
-    }
-    if (_ocrBusy) {
-      toast("OCR already running — please wait", "warn");
-      return;
-    }
-    _ocrBusy = true;
-
-    if (!window.Tesseract || typeof window.Tesseract.recognize !== "function") {
-      if (el.ocrStatus) el.ocrStatus.value = "Loading OCR library (optional)...";
-      const ok = await ensureTesseract();
-      if (!ok || !window.Tesseract || typeof window.Tesseract.recognize !== "function") {
-        if (el.ocrStatus) el.ocrStatus.value = "OCR unavailable offline. Charges, PINs, preview and copy still work offline.";
-        toast("OCR unavailable offline", "warn");
-        _ocrBusy = false;
-        return;
-      }
-    }
-    if (el.ocrStatus) {
-      el.ocrStatus.style.color = "";
-      el.ocrStatus.value = "Preprocessing image...";
-    }
-
-    let worker = null;
-
-    try {
-      const processedBlob = await preprocessImage(blob);
-      if (el.ocrStatus) el.ocrStatus.value = "Starting OCR engine...";
-
-      worker = await createOCRWorker((m) => {
-        if (!el.ocrStatus) return;
-        if (m.status === "recognizing text") el.ocrStatus.value = `OCR: ${Math.round((m.progress || 0) * 100)}%`;
-        else if (m.status === "loading language traineddata") el.ocrStatus.value = `Loading language data: ${Math.round((m.progress || 0) * 100)}%`;
-        else if (m.status === "initializing tesseract") el.ocrStatus.value = "Initializing OCR...";
-      });
-
-      // General OCR on full image / processed image
-      const general = await recognizeWithWorker(worker, processedBlob, "6");
-      let ocrText = postProcessOCR(general.text || "");
-      let p = parseOCR(ocrText);
-      let bestScore = scoreParsedOCRBundle(p) + ((general.confidence || 0) / 100);
-
-      // Full-screen screenshot helper: scan likely UI regions when the initial pass is weak
-      if (bestScore < 7) {
-        if (el.ocrStatus) el.ocrStatus.value = "Scanning full-screen screenshot regions...";
-        const regional = await runRegionalOCRPasses(worker, blob);
-        if (regional && regional.parsed) {
-          const regionalScore = regional.score || scoreParsedOCRBundle(regional.parsed);
-          if (regionalScore > bestScore) {
-            p = mergeParsedOCR(p, regional.parsed);
-            bestScore = regionalScore;
-            ocrText = [ocrText, "", `--- ${regional.label} OCR ---`, regional.text].filter(Boolean).join("\n");
-          }
-        }
-      }
-
-      // Left-zone detection for FiveM licences held mid-left
-      if (el.ocrStatus) el.ocrStatus.value = "Scanning left-side licence zones...";
-      const licenceResult = await detectAndParseLicenceFromImage(worker, blob);
-      if (licenceResult && licenceResult.parsed && licenceResult.parsed.score >= 3) {
-        p = mergeParsedOCR(p, licenceResult.parsed);
-        bestScore = Math.max(bestScore, licenceResult.parsed.score || 0);
-        ocrText = [ocrText, "", "--- LICENCE ZONE OCR ---", licenceResult.text].filter(Boolean).join("\n");
-      }
-
-      // Retry raw image if OCR is still weak
-      if (bestScore < 7 && blob.size > 0) {
-        if (el.ocrStatus) el.ocrStatus.value = "Retrying OCR with raw screenshot...";
-        const retry = await recognizeWithWorker(worker, blob, "3");
-        const retryText = postProcessOCR(retry.text || "");
-        const p2 = parseOCR(retryText);
-        const score2 = scoreParsedOCRBundle(p2) + ((retry.confidence || 0) / 100);
-        if (score2 > bestScore) {
-          p = mergeParsedOCR(p, p2);
-          bestScore = score2;
-          ocrText = [ocrText, "", "--- RAW SCREENSHOT OCR ---", retryText].filter(Boolean).join("\n");
-        }
-      }
-
-      if (worker && typeof worker.terminate === "function") {
-        await worker.terminate();
-        worker = null;
-      }
-
-      if (el.ocrStatus) el.ocrStatus.value = "OCR complete";
-      if (el.ocrText) el.ocrText.value = ocrText;
-      if (el.imgFile) el.imgFile.value = "";
-
-      // Vehicle apply — v47: uses syncVehicleFields helper
-      if (p.vehicle) {
-        const v = p.vehicle;
-        if (state.vicpolWarrant) syncVehicleFields(v, state.vicpolWarrant, "sw");
-        if (state.trafficWarrant) syncVehicleFields(v, state.trafficWarrant, "tw");
-      }
-
-      // Offender apply
-      const ocrOffender = {
-        name: p.offender.name || state.offender.name,
-        dob: p.offender.dob || state.offender.dob,
-        sex: p.offender.sex || state.offender.sex,
-        address: p.offender.address || state.offender.address,
-        phone: p.offender.phone || state.offender.phone
-      };
-      fillOffenderFields(ocrOffender);
-      if (ocrOffender.name) upsertPerson(ocrOffender);
-
-      // License info apply
-      if (p.license) {
-        state.currentDemeritPoints = p.license.demeritPoints || 0;
-        state.licenseStatus = p.license.licenseStatus || "";
-        state.licenseClass = p.license.licenseClass || "";
-        const demeritInput = document.getElementById("currentDemeritPoints");
-        if (demeritInput) demeritInput.value = state.currentDemeritPoints;
-        updateLicenseWarning();
-      }
-
-      if (p.meta.enteredBy && !norm(state.enteredBy)) state.enteredBy = p.meta.enteredBy;
-      if (p.meta.unit && !norm(state.enteredUnit)) state.enteredUnit = p.meta.unit;
-
-      if (p.officerNames && p.officerNames.length) {
-        const existing = ensureLines(state.officersList).split("\n").map(x => x.trim()).filter(Boolean);
-        const set = new Set(existing.map(x => x.toUpperCase()));
-        for (const name of p.officerNames) {
-          const key = name.trim().toUpperCase();
-          if (key && !set.has(key)) { existing.push(name.trim()); set.add(key); }
-        }
-        state.officersList = existing.join("\n");
-        existing.forEach(line => {
-          const parsed = parseOfficerLine(line);
-          if (parsed && (parsed.callsign || parsed.name.length >= 2)) upsertOfficer(parsed);
-          const cs = extractCallsignFromLine(line);
-          if (cs) addCallsignToPool(cs);
-        });
-      }
-
-      if (p.itemLines && p.itemLines.length) {
-        if (state.ocrWeaponsOnly) {
-          const cleanLines = buildWeaponsEvidenceLines(p.itemLines);
-          if (cleanLines.length) state.itemsList = mergeEvidenceAppend(state.itemsList, cleanLines);
-        } else {
-          const existing = ensureLines(state.itemsList).split("\n").map(x => x.trim()).filter(Boolean);
-          const set = new Set(existing.map(x => x.toUpperCase()));
-          for (const line of p.itemLines) {
-            const t = String(line || "").trim();
-            const key = t.toUpperCase();
-            if (t && !set.has(key)) { existing.push(t); set.add(key); }
-          }
-          state.itemsList = existing.join("\n");
-        }
-      }
-
-      // Evidence serial detection
-      const serialEvidence = parseEvidenceSerials(ocrText);
-      if (serialEvidence.length) {
-        const existingEv = ensureLines(state.evidence).split("\n").map(x => x.trim()).filter(Boolean);
-        const evSet = new Set(existingEv.map(x => x.toUpperCase()));
-        for (const line of serialEvidence) {
-          if (!evSet.has(line.toUpperCase())) { existingEv.push(line); evSet.add(line.toUpperCase()); }
-        }
-        state.evidence = existingEv.join("\n");
-      }
-
-      renderAll();
-      toast("OCR fields applied", "ok");
-    } catch (e) {
-      console.error(e);
-      if (worker && typeof worker.terminate === "function") {
-        try { await worker.terminate(); } catch (_) {}
-      }
-      if (el.ocrStatus) {
-        el.ocrStatus.value = "OCR failed";
-        el.ocrStatus.style.color = "rgba(255,120,120,0.95)";
-      }
-      toast("OCR error: " + e.message, "err");
-    } finally {
-      _ocrBusy = false;
-    }
-  }
 
   // Event Binding (CONSOLIDATED)
   // ============================================================================
@@ -8861,7 +8656,15 @@ Is there anything you would like to say regarding the charges?`;
         const item = [...e.clipboardData.items].find(i => i.type.startsWith("image/"));
         if (item) {
           e.preventDefault();
-          runOCR(item.getAsFile());
+          const file = item.getAsFile();
+          ocrLab.blob = file;
+          const src = document.getElementById('ocrLabSourcePreview');
+          if (src) { src.src = URL.createObjectURL(file); src.style.display = 'block'; }
+          const grid = document.getElementById('ocrLabResultsGrid');
+          const hint = document.getElementById('ocrNoResultsHint');
+          if (grid) grid.style.display = 'grid';
+          if (hint) hint.style.display = 'none';
+          runOcrLabScan(file, { autoApply: true });
         }
       });
 
@@ -8881,13 +8684,31 @@ Is there anything you would like to say regarding the charges?`;
         el.pasteZone.style.outline = "none";
         el.pasteZone.style.outlineOffset = "0";
         const file = [...(e.dataTransfer?.files || [])].find(f => f.type && f.type.startsWith("image/"));
-        if (file) runOCR(file);
+        if (file) {
+          ocrLab.blob = file;
+          const src = document.getElementById('ocrLabSourcePreview');
+          if (src) { src.src = URL.createObjectURL(file); src.style.display = 'block'; }
+          const grid = document.getElementById('ocrLabResultsGrid');
+          const hint = document.getElementById('ocrNoResultsHint');
+          if (grid) grid.style.display = 'grid';
+          if (hint) hint.style.display = 'none';
+          runOcrLabScan(file, { autoApply: true });
+        }
       });
     }
 
     if (el.imgFile) {
       el.imgFile.addEventListener("change", () => {
-        if (el.imgFile.files[0]) runOCR(el.imgFile.files[0]);
+        const file = el.imgFile.files[0];
+        if (!file) return;
+        ocrLab.blob = file;
+        const src = document.getElementById('ocrLabSourcePreview');
+        if (src) { src.src = URL.createObjectURL(file); src.style.display = 'block'; }
+        const grid = document.getElementById('ocrLabResultsGrid');
+        const hint = document.getElementById('ocrNoResultsHint');
+        if (grid) grid.style.display = 'grid';
+        if (hint) hint.style.display = 'none';
+        runOcrLabScan(file, { autoApply: true });
       });
     }
 
@@ -8895,20 +8716,22 @@ Is there anything you would like to say regarding the charges?`;
       el.clearOcrBtn.addEventListener("click", () => {
         state.ocrText = "";
         if (el.ocrText) el.ocrText.value = "";
-        if (el.ocrStatus) {
-          el.ocrStatus.value = "OCR idle";
-          el.ocrStatus.style.color = "";
-        }
+        if (el.ocrStatus) { el.ocrStatus.value = "Ready — load an image to begin"; el.ocrStatus.style.color = ""; }
+        if (el.imgFile) el.imgFile.value = "";
         if (typeof clearOcrLab === 'function') clearOcrLab();
+        toast("OCR cleared", "ok");
       });
     }
 
     if (el.ocrWeaponsOnly) {
       el.ocrWeaponsOnly.addEventListener("change", () => {
         state.ocrWeaponsOnly = !!el.ocrWeaponsOnly.checked;
+        const modeSelect = document.getElementById('ocrLabMode');
+        if (modeSelect && el.ocrWeaponsOnly.checked) modeSelect.value = 'weapons';
+        else if (modeSelect) modeSelect.value = 'auto';
         if (el.ocrStatus) {
-          el.ocrStatus.value = state.ocrWeaponsOnly ? "⚠ Weapons & Contraband mode active" : "OCR idle";
-          el.ocrStatus.style.color = state.ocrWeaponsOnly ? "rgba(255,160,80,0.95)" : "";
+          el.ocrStatus.value = el.ocrWeaponsOnly.checked ? "Weapons & Contraband mode — load image to scan" : "Ready — load an image to begin";
+          el.ocrStatus.style.color = el.ocrWeaponsOnly.checked ? "rgba(255,160,80,0.95)" : "";
         }
         throttledAutosave();
       });
@@ -11542,14 +11365,15 @@ Is there anything you would like to say regarding the charges?`;
 
   
   function showToolPage(page) {
-    const allowedPages = new Set(['report', 'traffic']);
+    const allowedPages = new Set(['report', 'traffic', 'ocr']);
     const target = allowedPages.has(page) ? page : 'report';
     document.querySelectorAll('.tool-page').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.tool-nav button').forEach(b => { b.classList.remove('nav-active'); b.setAttribute('aria-selected', 'false'); });
 
     const pageMap = {
       report: { panel: 'reportPage', tab: 'tab-report' },
-      traffic: { panel: 'trafficPage', tab: 'tab-traffic' }
+      traffic: { panel: 'trafficPage', tab: 'tab-traffic' },
+      ocr: { panel: 'ocrPage', tab: 'tab-ocr' }
     };
 
     const cfg = pageMap[target] || pageMap.report;
@@ -12807,9 +12631,6 @@ Is there anything you would like to say regarding the charges?`;
   }
 
   function initOcrLabBindings() {
-    const panel = document.getElementById('ocrAdvancedPanel');
-    const backdrop = document.getElementById('ocrAdvBackdrop');
-    const closeBtn = document.getElementById('ocrAdvCloseBtn');
     const runBtn = document.getElementById('ocrLabRunBtn');
     const applyBtn = document.getElementById('ocrLabApplyBtn');
     const clearBtn = document.getElementById('ocrLabClearBtn');
@@ -12819,31 +12640,17 @@ Is there anything you would like to say regarding the charges?`;
     const applyItemsBtn = document.getElementById('ocrLabApplyItemsBtn');
     const applyRawBtn = document.getElementById('ocrLabApplyRawBtn');
 
-    function closeAdvPanel() {
-      if (panel) panel.removeAttribute('open');
-      if (backdrop) backdrop.classList.remove('show');
-    }
-
-    if (panel && panel.dataset.bound !== '1') {
-      panel.dataset.bound = '1';
-      panel.addEventListener('toggle', () => {
-        if (backdrop) backdrop.classList.toggle('show', panel.open);
-      });
-    }
-    if (backdrop && backdrop.dataset.bound !== '1') {
-      backdrop.dataset.bound = '1';
-      backdrop.addEventListener('click', closeAdvPanel);
-    }
-    if (closeBtn && closeBtn.dataset.bound !== '1') {
-      closeBtn.dataset.bound = '1';
-      closeBtn.addEventListener('click', closeAdvPanel);
-    }
+    // OCR results grid — show after first run
 
     if (runBtn && runBtn.dataset.bound !== '1') {
       runBtn.dataset.bound = '1';
       runBtn.addEventListener('click', () => {
-        if (!ocrLab.blob) return toast('Paste or drop an image above first', 'warn');
-        runOcrLabScan(ocrLab.blob);
+        if (!ocrLab.blob) return toast('Load an image first using the file pickers above', 'warn');
+        const grid = document.getElementById('ocrLabResultsGrid');
+        const hint = document.getElementById('ocrNoResultsHint');
+        if (grid) grid.style.display = 'grid';
+        if (hint) hint.style.display = 'none';
+        runOcrLabScan(ocrLab.blob, { autoApply: document.getElementById('ocrLabAutoApply')?.checked ?? true });
       });
     }
     if (applyBtn && applyBtn.dataset.bound !== '1') {
@@ -12864,12 +12671,14 @@ Is there anything you would like to say regarding the charges?`;
       ocrLabFileInput.addEventListener('change', () => {
         const f = ocrLabFileInput.files[0];
         if (!f) return;
-        buildOcrLabPreviewData(f).then(blob => {
-          ocrLab.blob = blob;
-          const src = document.getElementById('ocrLabSourcePreview');
-          if (src) { src.src = URL.createObjectURL(blob); src.style.display = 'block'; }
-          toast('Image loaded into Advanced OCR', 'ok');
-        }).catch(() => toast('Failed to load image', 'err'));
+        ocrLab.blob = f;
+        const src = document.getElementById('ocrLabSourcePreview');
+        if (src) { src.src = URL.createObjectURL(f); src.style.display = 'block'; }
+        const grid = document.getElementById('ocrLabResultsGrid');
+        const hint = document.getElementById('ocrNoResultsHint');
+        if (grid) grid.style.display = 'grid';
+        if (hint) hint.style.display = 'none';
+        runOcrLabScan(f, { autoApply: true });
       });
     }
     if (applyPersonBtn && applyPersonBtn.dataset.bound !== '1') {
