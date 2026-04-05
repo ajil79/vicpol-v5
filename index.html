@@ -96,6 +96,9 @@
     }
     @media (max-width:1100px){ main{grid-template-columns:1fr} }
     @media (max-width:600px){
+      .copy-btn-full{display:none !important}
+      .copy-btn-short{display:inline !important}
+
       header{padding:14px 12px 10px}
       main{padding:0 10px 14px}
       .title{font-size:15px}
@@ -733,7 +736,7 @@
       <div class="report-badge" id="reportBadge">ARREST REPORT</div>
     </div>
     <div class="actions">
-      <button class="btn" id="copyBtn">Copy Preview <span class="kbd">Ctrl+Shift+C</span></button>
+      <button class="btn" id="copyBtn"><span class="copy-btn-full">Copy Preview <span class="kbd">Ctrl+Shift+C</span></span><span class="copy-btn-short" style="display:none">Copy</span></button>
       <button class="btn" id="saveDraftBtn">Save Draft <span class="kbd">Ctrl+S</span></button>
       <button class="btn" id="presetsBtn" title="Save or load officer presets">⚙ Templates</button>
       <button class="btn" id="themeToggleBtn" title="Toggle dark/light mode">☀ Light</button>
@@ -860,7 +863,7 @@
         </div>
         <div id="selectedPins" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; min-height:32px; padding:8px; background:rgba(0,0,0,0.2); border-radius:8px; border:1px solid var(--border)"></div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; padding:10px; background:rgba(0,0,0,0.15); border:1px solid var(--border); border-radius:10px">
-          <label><div class="lbl">Subject's Current Demerit Points <span style="font-weight:400;color:var(--ok)">(auto-fills from LEAP/OCR)</span></div><input id="currentDemeritPoints" type="number" min="0" max="50" value="0" placeholder="0" style="margin:0"/></label>
+          <label><div class="lbl">Subject's Current Demerit Points <span style="font-weight:400;color:var(--ok)">(auto-fills from LEAP/OCR)</span></div><input id="currentDemeritPoints" type="number" inputmode="numeric" min="0" max="50" value="0" placeholder="0" style="margin:0"/></label>
           <div style="align-self:end;font-size:12px;color:var(--muted);padding:10px 0">12+ pts in 7 days = mandatory suspension</div>
         </div>
         <div id="pinList" style="max-height:300px; overflow-y:auto; display:grid; gap:6px"></div>
@@ -1127,7 +1130,7 @@ Date        P?    Amount        Offence
 
         <!-- Add row: qty + serial + add -->
         <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:6px">
-          <input id="itemQtyInput" type="number" min="1" value="1" style="width:60px; margin:0; flex-shrink:0" placeholder="Qty"/>
+          <input id="itemQtyInput" type="number" inputmode="numeric" min="1" value="1" style="width:60px; margin:0; flex-shrink:0" placeholder="Qty"/>
           <input id="itemText" placeholder="Item name (auto-filled or type custom)" style="flex:1; min-width:150px; margin:0"/>
           <input id="itemSerialInput" placeholder="Serial # (if applicable)" style="width:160px; min-width:120px; margin:0; flex-shrink:0"/>
           <button class="btn" id="addItemBtn" style="flex-shrink:0">Add</button>
@@ -1135,6 +1138,7 @@ Date        P?    Amount        Offence
         <div class="hint" style="margin-bottom:8px"><span>💡</span><span>Click an item above to fill — set qty &amp; serial, then hit Add. Or type a custom item directly.</span></div>
 
         <textarea id="itemsList" rows="5" style="margin-top:4px" placeholder="Items appear here"></textarea>
+
       </div>
 
       <!-- Vehicle Inspection -->
@@ -1313,7 +1317,7 @@ Date        P?    Amount        Offence
               <span>Common: BWC on request, Photo of ID, Fingerprints taken, Mental image of pockets, Positive GSR, MDT / MELROADS profile, Plate reader, Officer statement, Fixed Vehicle Mounted Radar, Bodycam on request</span>
             </div>
             <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px">
-              <input type="number" id="evidenceQty" min="1" max="50000" value="1" style="width:80px; flex-shrink:0" placeholder="Qty"/>
+              <input type="number" inputmode="numeric" id="evidenceQty" min="1" max="50000" value="1" style="width:80px; flex-shrink:0" placeholder="Qty"/>
               <input type="text" id="evidenceItem" style="flex:1; min-width:150px" placeholder="e.g. BWC on request, Mental image of pockets, Positive GSR, MDT profile, Plate reader"/>
               <button class="btn" id="addEvidenceBtn" style="flex-shrink:0">Add Item</button>
             </div>
@@ -4860,11 +4864,6 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
     }
   }
 
-  function convertTZ(date, tzString) {
-    return new Date((typeof date === "string" ? new Date(date) : date).toLocaleString("en-US", { timeZone: tzString }));
-  }
-
-
 
   // Report Type Mapping
   const REPORT_TYPE_LABEL = {
@@ -6856,15 +6855,14 @@ Is there anything you would like to say regarding the charges?`;
     const out = [];
     const lines = raw.split(/\n+/).map(l => l.trim()).filter(Boolean);
     const serialRe = /\b(?:S\/?N|SN|SERIAL)\s*[:#-]?\s*([A-Z0-9]{5,})\b/i;
-    const looseSerialRe = /\b([A-Z]{2,}\d{5,}[A-Z0-9]*)\b/;
     const itemRe = /(PISTOL|HANDGUN|REVOLVER|RIFLE|SHOTGUN|SMG|CARBINE|KNIFE|SWITCHBLADE|BAT|CROWBAR|AMMO|AMMUNITION|MAGAZINE|SILENCER|SUPPRESSOR|SCOPE|EXPLOSIVE|C4|GRENADE)/i;
     for (const line of lines) {
       const s = line.replace(/\s+/g, ' ').trim();
       if (!s) continue;
-      const serial = s.match(serialRe) || s.match(looseSerialRe);
-      const item = s.match(itemRe);
-      if (!serial) continue;
+      const serial = s.match(serialRe);
+      if (!serial) continue; // only match explicit SN:/S/N:/SERIAL: labels
       const serialVal = serial[1].toUpperCase();
+      const item = s.match(itemRe);
       if (item) out.push(`${item[1].toUpperCase()} SN: ${serialVal}`);
       else out.push(`Serial ${serialVal}`);
     }
@@ -8738,20 +8736,13 @@ Is there anything you would like to say regarding the charges?`;
     }
     if (el.ocrText) {
       el.ocrText.addEventListener("input", () => {
-        state.ocrText = el.ocrText.value;
-        const p = parseOCR(el.ocrText.value || "");
+        const raw = el.ocrText.value || "";
+        state.ocrText = raw;
+        if (!raw.trim()) return;
+        // Run full OCR parse on manual text input — same pipeline as advanced OCR
+        const p = parseOCR(raw);
         if (!p) return;
-        const merged = { name: p.offender.name||state.offender.name, dob: p.offender.dob||state.offender.dob, sex: p.offender.sex||state.offender.sex, address: p.offender.address||state.offender.address, phone: p.offender.phone||state.offender.phone };
-        if (p.offender.name||p.offender.dob) { fillOffenderFields(merged); if (merged.name) upsertPerson(merged); }
-        if (p.license) { state.currentDemeritPoints = p.license.demeritPoints || 0; state.licenseStatus = p.license.licenseStatus || ""; state.licenseClass = p.license.licenseClass || ""; const _di = document.getElementById("currentDemeritPoints"); if (_di) _di.value = state.currentDemeritPoints; updateLicenseWarning(); }
-        if (p.vehicle) {
-          const v = p.vehicle;
-          // v47: Uses syncVehicleFields helper instead of duplicate blocks
-          syncVehicleFields(v, state.vicpolWarrant, "sw");
-          syncVehicleFields(v, state.trafficWarrant, "tw");
-        }
-        debouncedRenderPreview();
-        throttledAutosave();
+        applyParsedOcrBundleToReport(p, raw, 'all');
       });
     }
 
@@ -9895,14 +9886,15 @@ Is there anything you would like to say regarding the charges?`;
   }
 
   // Migrate: if state has callsigns but localStorage doesn't, seed it
-  (function migrateCallsigns() {
-    const stored = loadCallsignPool();
-    if (stored.length === 0 && state.savedCallsigns && state.savedCallsigns.length > 0) {
-      saveCallsignPool(state.savedCallsigns);
-    }
-    // Keep state.savedCallsigns in sync for backward compatibility
-    state.savedCallsigns = loadCallsignPool();
-  })();
+  try {
+    (function migrateCallsigns() {
+      const stored = loadCallsignPool();
+      if (stored.length === 0 && state.savedCallsigns && state.savedCallsigns.length > 0) {
+        saveCallsignPool(state.savedCallsigns);
+      }
+      state.savedCallsigns = loadCallsignPool();
+    })();
+  } catch(e) { /* migration not critical */ }
 
   function addCallsignToPool(cs) {
     if (!cs || !cs.trim()) return;
@@ -10839,6 +10831,10 @@ Is there anything you would like to say regarding the charges?`;
       { label: "Items", pattern: /^.*Confiscated Items:|^ITEMS SEIZED:/m },
       { label: "Summary", pattern: /^.*Summary of Events:|^Search Summary:/m },
       { label: "Signature", pattern: /^Signed[,:]$/m },
+      { label: "Field Contact", pattern: /^FIELD CONTACT REPORT/m },
+      { label: "Bail", pattern: /^\(1\) Conditions of Bail/m },
+      { label: "Interview", pattern: /^.*Interview Questions:/mi },
+      { label: "Preliminary", pattern: /^.*PRELIMINARY DETAILS:/mi },
     ];
 
     const lines = text.split("\n");
@@ -10950,7 +10946,7 @@ Is there anything you would like to say regarding the charges?`;
   // OCR AVAILABILITY INDICATOR
   // ==========================================================================
   function updateOcrAvailability() {
-    const statusEl = document.getElementById("ocrStatus");
+    const statusEl = document.getElementById("ocrLabStatus");
     if (!statusEl) return;
     if (state.ocrWeaponsOnly) return; // Don't override weapons-mode display
     if (window.Tesseract && typeof window.Tesseract.recognize === "function") {
@@ -11048,6 +11044,13 @@ Is there anything you would like to say regarding the charges?`;
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === "n") {
       e.preventDefault();
       fillNow();
+      return;
+    }
+
+    // Ctrl+Shift+O / Cmd+Shift+O → Switch to OCR tab
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && key === "o") {
+      e.preventDefault();
+      showToolPage('ocr');
       return;
     }
   });
@@ -12429,17 +12432,6 @@ Is there anything you would like to say regarding the charges?`;
     summariseOcrLabPasses(result?.passes || []);
   }
 
-  function setOcrLabSource(blob) {
-    if (!blob) return;
-    revokeOcrLabUrls();
-    ocrLab.blob = blob;
-    ocrLab.objectUrl = URL.createObjectURL(blob);
-    ocrLab.result = null;
-    renderOcrLabPreviews([]);
-    renderOcrLabResult(null);
-    ocrLabSetStatus('Image loaded. Ready to run Advanced OCR.');
-  }
-
   function applyParsedOcrBundleToReport(parsed, rawText = '', scope = 'all') {
     if (!parsed) return;
     const applyPerson = scope === 'all' || scope === 'person';
@@ -12487,6 +12479,54 @@ Is there anything you would like to say regarding the charges?`;
     if (applyRaw) {
       state.ocrText = rawText || '';
       if (el.ocrText) el.ocrText.value = state.ocrText;
+    }
+
+    // Serial numbers detected by OCR → append (SN: XXXX) to matching item in itemsList
+    if ((scope === 'all' || scope === 'items') && rawText) {
+      const serials = parseEvidenceSerials(rawText);
+      if (serials.length) {
+        let itemLines = ensureLines(state.itemsList).split('\n').map(x => x.trim()).filter(Boolean);
+        let changed = false;
+
+        for (const serial of serials) {
+          const snMatch = serial.match(/SN:\s*([A-Z0-9]+)/i);
+          const snVal = snMatch ? snMatch[1].toUpperCase() : null;
+          if (!snVal) continue;
+
+          // Skip if serial already present in itemsList
+          if (itemLines.some(l => l.toUpperCase().includes(snVal))) continue;
+
+          // Try to match weapon keyword to an existing item line
+          const weaponMatch = serial.match(/^([A-Z]+)\s+SN:/i);
+          const weaponKeyword = weaponMatch ? weaponMatch[1].toUpperCase() : null;
+
+          let matched = false;
+          if (weaponKeyword) {
+            for (let i = 0; i < itemLines.length; i++) {
+              if (itemLines[i].toUpperCase().includes(weaponKeyword)) {
+                itemLines[i] = itemLines[i].replace(/\s*\(SN:[^)]*\)/i, '') + ` (SN: ${snVal})`;
+                matched = true;
+                changed = true;
+                break;
+              }
+            }
+          }
+
+          // No matching item found — add as a new line
+          if (!matched) {
+            const label = weaponKeyword
+              ? `${weaponKeyword.charAt(0) + weaponKeyword.slice(1).toLowerCase()} (SN: ${snVal})`
+              : `Item (SN: ${snVal})`;
+            itemLines.push(label);
+            changed = true;
+          }
+        }
+
+        if (changed) {
+          state.itemsList = itemLines.join('\n');
+          if (el.itemsList) el.itemsList.value = state.itemsList;
+        }
+      }
     }
 
     renderAll();
