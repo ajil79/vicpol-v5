@@ -3373,6 +3373,7 @@ Date        P?    Amount        Offence
   }
 
   function setIfPresent(target, key, value, overwrite = false) {
+    if (!target) return false;
     const clean = norm(value);
     if (!clean) return false;
     if (overwrite || !norm(target?.[key])) {
@@ -6105,6 +6106,8 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
 
   function loadDraft(name) {
     try {
+      const hasWork = norm(state.offender.name) || norm(state.chargesList) || norm(state.summary) || norm(state.trafficWarrant?.rego);
+      if (hasWork && !confirm(`Load draft "${name}"? Your current form will be replaced.`)) return;
       const drafts = readStoredJson(DRAFTS_KEY, {});
       if (drafts[name]) {
         const draft = drafts[name];
@@ -6244,8 +6247,12 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
       if (!norm(vi.vehicleType)) warnings.push("No vehicle class selected.");
       if (vicType) {
         const cl = VIC_CHECKLISTS[vicType];
-        const checked = cl.items.filter(i => vicState[i.id] !== 'pending');
-        if (checked.length < cl.items.length) warnings.push(`Checklist incomplete: ${checked.length}/${cl.items.length} items checked.`);
+        if (cl) {
+          const checked = cl.items.filter(i => vicState[i.id] !== 'pending');
+          if (checked.length < cl.items.length) warnings.push(`Checklist incomplete: ${checked.length}/${cl.items.length} items checked.`);
+        } else {
+          warnings.push("Invalid vehicle type — please reselect.");
+        }
       }
       if (!norm(state.sigName)) warnings.push("Missing signature name.");
     } else if (type === "field_contact") {
@@ -8001,6 +8008,7 @@ Is there anything you would like to say regarding the charges?`;
         const qty = evidenceQty && evidenceQty.value ? parseInt(evidenceQty.value) : 1;
         const item = evidenceItem && evidenceItem.value ? evidenceItem.value.trim() : '';
         
+        if (!item) { toast("Enter an evidence item first", "warn"); return; }
         if (item) {
           const evidenceEntry = qty > 1 ? `${qty}x ${item}` : `1x ${item}`;
           evidenceItems.push(evidenceEntry);
@@ -8018,7 +8026,7 @@ Is there anything you would like to say regarding the charges?`;
       evidenceItem.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          addEvidenceBtn.click();
+          addEvidenceBtn?.click();
         }
       });
     }
@@ -8088,7 +8096,7 @@ Is there anything you would like to say regarding the charges?`;
     if (el.addOfficerBtn && el.officerText && el.officersList) {
       el.addOfficerBtn.addEventListener("click", () => {
         const val = (el.officerText.value || "").trim();
-        if (!val) return;
+        if (!val) { toast("Enter an officer name or callsign first", "warn"); return; }
         // Don't add duplicates
         const existing = (el.officersList.value || "").split("\n").map(l => l.trim().toUpperCase());
         if (existing.includes(val.toUpperCase())) { toast("Officer already added", "warn"); el.officerText.value = ""; return; }
@@ -8253,7 +8261,7 @@ Is there anything you would like to say regarding the charges?`;
       // Add button — builds formatted line from qty + name + serial
       el.addItemBtn.addEventListener("click", () => {
         const name = (el.itemText.value || "").trim();
-        if (!name) return;
+        if (!name) { toast("Enter an item name first", "warn"); return; }
         const qty = parseInt(itemQtyInput?.value) || 1;
         const serial = (itemSerialInput?.value || "").trim();
         let line = qty + "x " + name;
@@ -9069,8 +9077,8 @@ Is there anything you would like to say regarding the charges?`;
       row.addEventListener("mousedown",e=>{e.preventDefault();e.stopPropagation();});
       dropEl.appendChild(row);
     });
-    dropEl.addEventListener("mouseenter", () => { dropEl.dataset.hovering = "1"; }, { once:true });
-    dropEl.addEventListener("mouseleave", () => { dropEl.dataset.hovering = "0"; }, { once:true });
+    dropEl.addEventListener("mouseenter", () => { dropEl.dataset.hovering = "1"; });
+    dropEl.addEventListener("mouseleave", () => { dropEl.dataset.hovering = "0"; });
     dropEl.style.display="block";
   }
   function fillPersonFields(prefix, person) {
@@ -11708,6 +11716,7 @@ Is there anything you would like to say regarding the charges?`;
     if (typeEl && typeEl.value !== type) typeEl.value = type;
     vicType = type;
     const cl = VIC_CHECKLISTS[type];
+    if (!cl) return;
     const restored = savedState && typeof savedState === 'object' ? savedState : (state.vehicleInspection?.checklistState || {});
     vicState = {};
     cl.items.forEach(item => {
@@ -11781,6 +11790,7 @@ Is there anything you would like to say regarding the charges?`;
   function vicUpdateProgress() {
     if (!vicType) return;
     const cl = VIC_CHECKLISTS[vicType];
+    if (!cl) return;
     const items = cl.items;
     const checked = items.filter(i => vicState[i.id] !== 'pending');
     const passed = items.filter(i => vicState[i.id] === 'pass');
