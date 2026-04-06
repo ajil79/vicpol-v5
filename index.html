@@ -113,6 +113,8 @@
       .kbd{display:none}
       .tool-nav{padding:0 10px;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:0}
       .tool-nav button{padding:10px 14px;font-size:12px;white-space:nowrap;flex-shrink:0}
+      .section-toggle-btn{padding:8px 12px}
+      .card-collapse-btn{padding:8px 12px}
       .quick-evidence{font-size:10px !important;padding:4px 8px !important}
       #itemSearchInput{font-size:12px}
       #itemCategoryFilter{width:100% !important}
@@ -427,7 +429,7 @@
       border: 1px solid var(--border);
       color: var(--muted);
       border-radius: 3px;
-      padding: 4px 8px;
+      padding: 6px 10px;
       cursor: pointer;
       font-size: 12px;
       line-height: 1;
@@ -436,7 +438,7 @@
     }
     .section-toggle-btn:hover { background: rgba(255,80,80,0.15); border-color: rgba(255,80,80,0.4); color: rgba(255,150,150,0.9); }
     .section-excluded .section-toggle-btn { background: rgba(255,80,80,0.12); border-color: rgba(255,80,80,0.35); color: rgba(255,150,150,0.9); }
-    .card-collapse-btn{background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:4px 8px;cursor:pointer;font-size:12px;line-height:1;flex-shrink:0;transition:all 0.15s ease}
+    .card-collapse-btn{background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--muted);border-radius:3px;padding:6px 10px;cursor:pointer;font-size:12px;line-height:1;flex-shrink:0;transition:all 0.15s ease}
     .card-collapse-btn:hover{background:rgba(0,191,255,0.14);border-color:rgba(0,191,255,0.35);color:var(--vp-cyan)}
     .card-collapsed .card-collapsible-body{display:none}
     .card-collapsed .section-header-row{margin-bottom:0 !important}
@@ -3467,10 +3469,6 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
 }
 
 
-  function updateCrossLinkStatus() {
-    return;
-  }
-
   function syncReportSubjectInto(targetKey, options = {}) {
     const { overwrite = false, includePerson = true, includePrelim = false, showToast = true } = options;
     const seed = getLinkedReportSeed();
@@ -3506,7 +3504,6 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
 
     debouncedRenderPreview();
     throttledAutosave();
-    updateCrossLinkStatus();
     if (showToast) {
       const label = targetKey === 'fieldContact' ? 'Field Contact' : 'Search & Seizure';
       toast(changed ? `${label} linked details updated` : `No linked details available for ${label}`, changed ? 'ok' : 'warn');
@@ -4731,6 +4728,7 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
     swStolen: document.getElementById("swStolen"),
     swSuspended: document.getElementById("swSuspended"),
     swOwner: document.getElementById("swOwner"),
+    swInstruction: document.getElementById("swInstruction"),
     // Bail Conditions
     bcBailAmount: document.getElementById("bcBailAmount"),
     bcDate: document.getElementById("bcDate"),
@@ -5004,7 +5002,6 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
       el.vehicleInspectionCard.style.display = "block";
       el.officersCard.style.display = "block";
     }
-    updateCrossLinkStatus();
   }
 
   // Preview Generation (DEBOUNCED)
@@ -5366,7 +5363,7 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
     
     if (!sectionExcluded("sentence") && norm(state.evidenceLocker)) {
       add(`(${++dn}) Evidence Locker Number:`);
-      add(norm(state.evidenceLocker));
+      add(`- ${norm(state.evidenceLocker)}`);
       add("");
     }
     
@@ -5413,10 +5410,10 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
       }
       add("");
       add(`(${++rn}) Witnesses Interviewed:`);
-      add("N/A");
+      add("- N/A");
       add("");
     }
-    
+
     if (!sectionExcluded("interview") && norm(state.interviewQs)) {
       add(`(${++rn}) Interview Questions Outstanding:`);
       lines(state.interviewQs).forEach(x => add(`- ${x}`));
@@ -5562,10 +5559,10 @@ function enforceVicpolWarrantIdStatus(showToast = false) {
       }
       add("");
       add(`(${++rn}) Witnesses Interviewed:`);
-      add("N/A");
+      add("- N/A");
       add("");
     }
-    
+
     if (!sectionExcluded("interview") && norm(state.interviewQs)) {
       add(`(${++rn}) Interview Questions Outstanding:`);
       lines(state.interviewQs).forEach(x => add(`- ${x}`));
@@ -8975,7 +8972,6 @@ Is there anything you would like to say regarding the charges?`;
     updateSentenceSuggestion();
     updateNarrativeHints();
     applyExcludedClasses();
-    updateCrossLinkStatus();
     debouncedRenderPreview();
   }
 
